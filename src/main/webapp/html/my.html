@@ -6,6 +6,32 @@
 </head>
 <body>
 <h1>RPG admin panel</h1>
+<table id="table">
+    <tr> <th>#</th> <th>Name</th>  <th>Title</th> <th>Race</th> <th>Profession</th> <th>Level</th> <th>Birthday</th> <th>Banned</th> </tr>
+</table>
 
 </body>
+<script>
+    let table = document.getElementById("table");
+    $.ajax({
+        url: '/rest/players',
+        method: 'GET',
+        dataType: 'json',  // указываем формат возвращаемых данных (в данном случае JSON)
+        success: function(data) {
+            $.each(data, function(key, value) {
+                var row = $('<tr>');
+                row.append($('<td>').text(value.id));
+                row.append($('<td>').text(value.name));
+                row.append($('<td>').text(value.title));
+                row.append($('<td>').text(value.race));
+                row.append($('<td>').text(value.profession));
+                row.append($('<td>').text(value.level));
+                row.append($('<td>').text(new Date(value.birthday).toLocaleDateString()));
+                row.append($('<td>').text(value.banned));
+                $('#table tbody').append(row);
+            });
+        }
+    });
+
+</script>
 </html>
