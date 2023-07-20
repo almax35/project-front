@@ -4,34 +4,93 @@
     <script src=https://code.jquery.com/jquery-3.6.0.min.js></script>
     <link href="/css/my.css" rel="stylesheet">
 </head>
-<body>
+<body onload="showPlayers(1)">
 <h1>RPG admin panel</h1>
-<table id="table">
+<select name="rows" id="select" onchange="showPlayers(1)">
+    <option value="3">3</option>
+    <option value="5">5</option>
+    <option value="10">10</option>
+    <option value="15">15</option>
+    <option value="20">20</option>
+</select>
+<table id="table" class="table">
     <tr> <th>#</th> <th>Name</th>  <th>Title</th> <th>Race</th> <th>Profession</th> <th>Level</th> <th>Birthday</th> <th>Banned</th> </tr>
 </table>
+<div id="pages">
+
+</div>
 
 </body>
 <script>
-    let table = document.getElementById("table");
-    $.ajax({
-        url: '/rest/players',
-        method: 'GET',
-        dataType: 'json',  // указываем формат возвращаемых данных (в данном случае JSON)
-        success: function(data) {
-            $.each(data, function(key, value) {
-                var row = $('<tr>');
-                row.append($('<td>').text(value.id));
-                row.append($('<td>').text(value.name));
-                row.append($('<td>').text(value.title));
-                row.append($('<td>').text(value.race));
-                row.append($('<td>').text(value.profession));
-                row.append($('<td>').text(value.level));
-                row.append($('<td>').text(new Date(value.birthday).toLocaleDateString()));
-                row.append($('<td>').text(value.banned));
-                $('#table tbody').append(row);
-            });
-        }
-    });
+    function showPlayers(pageNumber) {
+        let select = document.getElementById("select");
+        let pageSize = select.value;
+        $.ajax({
+            url: '/rest/players',
+            method: 'GET',
+            data: {
+                pageNumber: pageNumber-1,
+                pageSize: pageSize
+            },
+            dataType: 'json',
+            success: function (data) {
+                removeTable();
+                removeButton();
+                $.each(data, function (key, value) {
+                    let row = $('<tr>');
+                    row.append($('<td>').text(value.id));
+                    row.append($('<td>').text(value.name));
+                    row.append($('<td>').text(value.title));
+                    row.append($('<td>').text(value.race));
+                    row.append($('<td>').text(value.profession));
+                    row.append($('<td>').text(value.level));
+                    row.append($('<td>').text(new Date(value.birthday).toLocaleDateString()));
+                    row.append($('<td>').text(value.banned));
+                    $('#table tbody').append(row);
+                });
+                let playersCount=showCountPlayers();
+                let parentElement = document.getElementById("pages");
+                for (let i=1; i<=Math.ceil(playersCount/pageSize); i++) {
+                    let button = document.createElement("button");
+                    button.setAttribute("class", "pageButton");
+                    button.setAttribute("onclick","showPlayers("+i+")")
+                    button.innerText = i.toString();
+                    parentElement.appendChild(button);
+                }
+            }
+        });
 
+    }
+</script>
+<script>
+    function showCountPlayers(){
+        let result=0;
+        $.ajax({
+            url: '/rest/players/count',
+            method: 'GET',
+            async: false,
+            success: function (data){
+                result=parseInt(data);
+            }
+        })
+        return result;
+    }
+</script>
+<script>
+    function removeTable(){
+        let table = document.getElementById("table");
+        let tbody = table.getElementsByTagName("tbody")[0];
+        while (tbody.firstChild) {
+            tbody.removeChild(tbody.firstChild);
+        }
+    }
+</script>
+<script>
+    function removeButton(){
+        let pages=document.getElementById("pages");
+        while (pages.firstChild){
+            pages.removeChild(pages.firstChild);
+        }
+    }
 </script>
 </html>
